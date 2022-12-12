@@ -44,12 +44,6 @@ CREATE TABLE Fields(
 	Name VARCHAR(30) NOT NULL
 );
 	
-CREATE TABLE Grades (
-	GradeId SERIAL PRIMARY KEY,
-	Value INT CHECK(Value BETWEEN 1 AND 5)
-);
-	
-	
 CREATE TABLE InternFields (
 	InternFieldId SERIAL PRIMARY KEY,
 	InternId INT REFERENCES Interns(InternId),
@@ -69,17 +63,17 @@ CREATE TABLE InternshipField (
 	LeaderId INT REFERENCES Members(MemberId)
 );
 
-CREATE TABLE InternGrades (
+CREATE TABLE InternHomework (
 	InternGradeId SERIAL PRIMARY KEY,
 	InternFieldId INT REFERENCES InternFields(InternFieldID),
-	GradeId INT REFERENCES Grades(GradeId),
+	Grade INT  CHECK(Grade BETWEEN 1 AND 5),
 	EvaluatorId INT REFERENCES Members(MemberId)
 );
+
 
 ------------------------
 /*insert all data*/
 ------------------------
-
 
 INSERT INTO Interns(FirstName, LastName, OIB, BirthDate, Gender, PlaceOfResidence) VALUES
 	('Dorotea', 'Herceg', '39204716391', '2002-04-09', 'F', 'Split'),
@@ -252,7 +246,7 @@ INSERT INTO InternshipField(InternshipId,FieldId,LeaderId) VALUES
 	(5,1,1),(5,2,11),(5,3,2),(5,4,10),
 	(6,1,3),(6,2,5),(6,3,2),(6,4,4)
 --
-INSERT INTO InternGrades(InternFieldId,GradeId,EvaluatorId) VALUES
+INSERT INTO InternHomework(InternFieldId,Grade,EvaluatorId) VALUES
 	(51,2,4),(51,5,10),(51,4,23),
 	(53,4,3),(53,3,15),(53,2,21),
 	(54,4,14),(54,3,16),(54,2,14),
@@ -303,7 +297,7 @@ INSERT INTO InternGrades(InternFieldId,GradeId,EvaluatorId) VALUES
 /*Query requests*/
 ----------------------
 --1--
-SELECT FirstName, LastName 
+SELECT FirstName, LastName,PlaceOfResidence
 FROM Members
 	WHERE PlaceOfResidence NOT LIKE 'Split'
 
@@ -313,20 +307,19 @@ FROM Internships
 	ORDER BY StartDate DESC
 	
 --3--
-SELECT FirstName, LastName 
-FROM Interns i
-INNER JOIN InternFields inf ON i.InternId=inf.InternId
-INNER JOIN InternshipField intf ON inf.FieldId=intf.InternshipFieldId
-INNER JOIN Internships it ON intf.InternshipId=it.InternshipId
-	WHERE EXTRACT(YEAR FROM it.StartDate)>2021 AND EXTRACT(YEAR FROM it.EndDate)<2022
+SELECT DISTINCT FirstName, LastName FROM Interns i
+JOIN InternFields inf ON i.InternId=inf.InternId
+JOIN InternshipField intf ON inf.FieldId=intf.FieldId
+JOIN Internships it ON intf.InternshipId=it.InternshipId
+	WHERE inf.StatusId=3 AND EXTRACT(YEAR FROM it.StartDate)=2021 AND EXTRACT(YEAR FROM it.EndDate)=2022
 	
 --4--
 SELECT COUNT(*) AS NumberOfGirlsOnDevInternship 
 FROM Interns i
-INNER JOIN InternFields inf ON i.InternId=inf.InternId
-INNER JOIN InternshipField intf ON inf.FieldId=intf.InternshipFieldId
-INNER JOIN Internships it ON intf.InternshipId=it.InternshipId
-	WHERE i.Gender='F' AND EXTRACT(YEAR FROM it.StartDate)=EXTRACT(YEAR FROM NOW())
+JOIN InternFields inf ON i.InternId=inf.InternId
+JOIN InternshipField intf ON inf.FieldId=intf.FieldId
+JOIN Internships it ON intf.InternshipId=it.InternshipId
+	WHERE i.Gender='F' AND inf.StatusId=1 AND inf.FieldId=1 AND EXTRACT(YEAR FROM it.StartDate)=EXTRACT(YEAR FROM NOW())
 	
 --5--
 SELECT DISTINCT COUNT(*) AS NumberOfKickedOutMarketingInterns FROM Interns i
@@ -342,6 +335,7 @@ SET PlaceOfResidence = 'Moscow'
 DELETE FROM Members
 WHERE (EXTRACT(YEAR FROM NOW())-EXTRACT(YEAR FROM BirthDate))>25
 
+--8--
 
-
-
+	
+	
