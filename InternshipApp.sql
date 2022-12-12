@@ -336,9 +336,17 @@ DELETE FROM Members
 WHERE (EXTRACT(YEAR FROM NOW())-EXTRACT(YEAR FROM BirthDate))>25
 
 --8--
---finding interns with average<2.4--
+--finding interns with average<2.4
 SELECT DISTINCT FirstName,LastName,AVG(Grade) AS AverageGrade
 FROM (Interns i
 JOIN InternFields inf ON i.InternId=inf.InternId
 JOIN InternHomework ih ON inf.InternFieldId=ih.InternFieldId)
-	GROUP BY i.FirstName,i.LastName, HAVING AVG(Grade) <= 2.4
+	GROUP BY i.FirstName,i.LastName
+	HAVING AVG(Grade) <= 2.4
+	
+--
+UPDATE InternFields inf
+	SET StatusId = 2
+	WHERE (SELECT AVG(Grade) 
+			FROM InternHomework ih WHERE inf.InternFieldId = ih.InternFieldId
+		  	GROUP BY inf.InternId,inf.InternFieldId) < 2.4;
